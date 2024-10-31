@@ -1,0 +1,16 @@
+{
+  "smtp": {
+    "hostname": "localhost",
+    "port": 8025,
+    "domain": "test@test.com",
+    "require_tls": true,
+    "require_auth": true,
+    "tls_cert_chain": ["./cert.pem", "./key.pem"],
+    "users": [
+      {
+        "name": "test",
+        "password": "12345"
+      }
+    ]
+  }
+}
