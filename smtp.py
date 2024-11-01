@@ -5,9 +5,10 @@ from aiosmtpd.smtp import AuthResult, LoginPassword
 
 # Class for handling incoming SMTP requests
 class SMTPHandler:
-    def __init__(self, domain, callback) -> None:
+    def __init__(self, domain, check_id, callback) -> None:
         self.domain = domain
         self.callback = callback
+        self.check_id = check_id
     
     # Handle address
     async def handle_RCPT(self, server, session, envelope, address, rcpt_options):
@@ -18,7 +19,9 @@ class SMTPHandler:
         # Check target address and add it to the list
         to_addr = address.split("@")
         if len(to_addr) != 2:
-            return "550 Incorrect target adress: '{}'".format("@".join(to_addr))
+            return "550 Incorrect target address: '{}'".format("@".join(to_addr))
+        if not self.check_id(address):
+            return "550 Target address not found: '{}'".format(address)
         envelope.rcpt_tos.append(address)
         # Return ok
         return '250 OK'
@@ -48,7 +51,7 @@ class SMTPHandler:
             message += "\n{}".format(ln.strip())
         message = message.rstrip("\n")
         # Forward message data to callback function
-        self.callback(
+        await self.callback(
             source = source_email, 
             targets = target_emails,
             subject = subject,
@@ -84,7 +87,7 @@ class SMTPAuthenticator:
 
 # SMTP server class
 class SMTP:
-    def __init__(self, hostname, port, domain, require_tls = False, require_auth = False, tls_cert_chain = [], users = [], callback = None) -> None:
+    def __init__(self, hostname, port, domain, require_tls = False, require_auth = False, tls_cert_chain = [], users = [], check_id = None, callback = None) -> None:
         # Initialize parameters
         self.hostname = hostname
         self.port = port
@@ -115,8 +118,11 @@ class SMTP:
             controller_parameters["auth_require_tls"] = False
         # Initialize controller
         self.controller = Controller(
-            SMTPHandler(self.domain, callback = callback), 
+            SMTPHandler(self.domain, check_id = check_id, callback = callback), 
             **controller_parameters
         )
-        # Start controller
-        self.controller.start()
+    def start(self):
+        self.controller.start() #type: ignore
+    def stop(self):
+        self.controller.stop() #type: ignore
+        

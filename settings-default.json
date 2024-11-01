@@ -12,5 +12,14 @@
         "password": "12345"
       }
     ]
+  },
+  "telegram": {
+    "api_token": "12345",
+    "proxy": "",
+    "max_length": 4096
+  },
+  "test": {
+    "target": "test@test.com",
+    "message": "Hello from Telegram SMTP!"
   }
 }
