@@ -7,7 +7,6 @@ from smtp import SMTP
 from database import find_chat, update_user
 from middleware import catch_errors, use_auth, use_context_args, api_call
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
 
 # Enable logging
 logging.basicConfig(
@@ -19,11 +18,22 @@ logging.basicConfig(
 with open("settings.json", "r") as f:
     settings = json.loads(f.read())
 
+# Load language
+with open("lang.json", "r") as f:
+    lang = json.loads(f.read())[settings["app"]["lang"]]
+    help_message = settings["app"]["greetings"].format(help=lang["help_message"])
+
+# Show greetings
+@catch_errors
+@api_call
+async def start():
+    return help_message
+
 # Show help
 @catch_errors
 @api_call
 async def help():
-    return "[help_message]"
+    return help_message
 
 # Update user
 @catch_errors
@@ -32,10 +42,12 @@ async def help():
 @api_call
 async def register(chat_id: int, context_args):
     if len(context_args) != 1:
-        return "[invalid_argument]"
+        return lang["invalid_email"]
     email = context_args[0]
-    update_user(chat_id, email)
-    return "[email_updated]"
+    user = update_user(chat_id, email)
+    if not user:
+        return lang["email_taken"]
+    return lang["email_updated"]
 
 # Send messages using bot
 async def send(app, source, targets, subject, message):
@@ -43,7 +55,8 @@ async def send(app, source, targets, subject, message):
         chat_id = find_chat(target)
         if not chat_id: #type: ignore
             return
-        await app.bot.send_message(chat_id=chat_id, text=message)
+        resp = settings["app"]["message"].format(source=source, target=target, subject=subject, message=message)
+        await app.bot.send_message(chat_id=chat_id, text=resp)
         logging.info("Message forwarded to telegram chat: {} ({})".format(chat_id, target))
 
 # Create new Telegram bot
@@ -80,8 +93,9 @@ async def command_loop():
     # Build bot
     app = create_bot()
     # Add commands
-    app.add_handler(CommandHandler('register', register)) #type: ignore
+    app.add_handler(CommandHandler('start', start)) #type: ignore
     app.add_handler(CommandHandler('help', help)) #type: ignore
+    app.add_handler(CommandHandler('register', register)) #type: ignore
     # Start bot
     await app.initialize()
     await app.start()

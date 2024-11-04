@@ -35,6 +35,7 @@ class SMTPHandler:
         subject = "Undefined"
         message = ""
         # Loop through data line by line
+        print(envelope.content)
         for ln in envelope.content.decode('utf8', errors='replace').splitlines():
             # Remove trailing spaces
             ln = ln.strip()
@@ -48,7 +49,7 @@ class SMTPHandler:
             elif len(meta) > 1 or len(ln) < 1:
                 continue
             # Write message
-            message += "\n{}".format(ln.strip())
+            message += "{}\n".format(ln.strip())
         message = message.rstrip("\n")
         # Forward message data to callback function
         await self.callback(

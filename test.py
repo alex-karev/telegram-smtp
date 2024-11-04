@@ -1,5 +1,6 @@
 #!.env/bin/python
 from smtplib import SMTP as Client
+from email.mime.text import MIMEText
 import json
 
 def main():
@@ -15,15 +16,11 @@ def main():
     if settings["require_auth"]:
         client.login(user["name"], user["password"])
     source = "info@{}".format(settings["domain"])
-    client.sendmail(source, test_data["target"], 
-        """
-        From: Anne Person {}
-        To: Bart Person {}
-        Subject: Test Message
-        Message-ID: <ant>
-        {}
-        """.format(source, test_data["target"], test_data["message"])
-    )
+    msg = MIMEText(test_data["message"], "plain", 'utf-8')
+    msg['Subject'] = test_data["subject"]
+    msg['From'] = source
+    msg['To'] = test_data["target"]
+    client.sendmail(source, test_data["target"], msg.as_string())
 
 if __name__ == "__main__":
     main()

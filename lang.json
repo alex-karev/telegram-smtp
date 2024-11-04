@@ -1,0 +1,14 @@
+{
+  "en": {
+    "help_message": "\t/register [email] - register/update email.\n\t\tExample: /register user@mail.com\n\t/help - show this message",
+    "invalid_email": "Invalid email or no email specified! Use /help for more information.",
+    "email_updated": "Your email settings were successfully updated!",
+    "email_taken": "This email is already registered by a different user!"
+  },
+  "ru": {
+    "help_message": "\t/register [email] - зарегистрировать/обновить email.\n\t\tПример: /register user@mail.com\n\t/help - показать это сообщение.",
+    "invalid_email": "Не правильный или отсутствующий email! Введите /help для дополнительной информации!",
+    "email_updated": "Ваш email был успешно обновлён!",
+    "email_taken": "Этот email уже зарегистрирован другим пользователем!"
+  }
+}

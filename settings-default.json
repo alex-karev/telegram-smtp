@@ -21,5 +21,10 @@
   "test": {
     "target": "test@test.com",
     "message": "Hello from Telegram SMTP!"
+  },
+  "app": {
+    "lang": "en",
+    "greetings": "Welcome to Telegram SMTP Bot!\n\n{help}",
+    "message_template": "From: {source}\nTo: {target}\nSubject: {subject}\n---\n\n{message}"
   }
 }
