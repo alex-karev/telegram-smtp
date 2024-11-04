@@ -2,6 +2,8 @@ import ssl
 import os
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword
+from email import message_from_bytes
+from email.header import decode_header
 
 # Class for handling incoming SMTP requests
 class SMTPHandler:
@@ -31,32 +33,28 @@ class SMTPHandler:
         # Extract source and target addresses
         source_email = envelope.mail_from
         target_emails = envelope.rcpt_tos
-        # Dummy data
-        subject = "Undefined"
-        message = ""
-        # Loop through data line by line
-        print(envelope.content)
-        for ln in envelope.content.decode('utf8', errors='replace').splitlines():
-            # Remove trailing spaces
-            ln = ln.strip()
-            # Extract meta
-            meta = ln.split(":")
-            # Save subject
-            if len(meta) > 1 and meta[0] == "Subject":
-                subject = meta[1].strip()
-                continue
-            # Ignore other meta and empty lines
-            elif len(meta) > 1 or len(ln) < 1:
-                continue
-            # Write message
-            message += "{}\n".format(ln.strip())
-        message = message.rstrip("\n")
+        # Parse message
+        message = message_from_bytes(envelope.content)
+        # Decode payload
+        payload = message.get_payload(decode=True)
+        payload_encoding = message.get_content_charset()
+        if payload:
+            payload = payload.decode(payload_encoding or "utf8") #type: ignore
+        else:
+            payload = ""
+        payload = payload.strip()
+        # Decode subject
+        subject, subject_encoding = decode_header(message["Subject"])[0]
+        if isinstance(subject, bytes):
+            subject = subject.decode(subject_encoding or "utf8")
+        else:
+            subject = "Unknown"
         # Forward message data to callback function
         await self.callback(
             source = source_email, 
             targets = target_emails,
             subject = subject,
-            message = message
+            message = payload
         )
         # Return ok response
         return '250 Message accepted for delivery'
